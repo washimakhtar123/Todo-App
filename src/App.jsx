@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 const App = () => {
   const [val, setVal] = useState("");
@@ -6,24 +6,43 @@ const App = () => {
   const [editIndex, setEditIndex] = useState(null);
   const [search, setSearch] = useState("");
 
+  // Load tasks from localStorage when the component mounts
+  useEffect(() => {
+    const savedTasks = localStorage.getItem("tasks");
+    if (savedTasks) {
+      setTasks(JSON.parse(savedTasks));
+    }
+  }, []); // Runs only once when the app loads
+
+  // Save tasks to localStorage whenever tasks change
+  useEffect(() => {
+    if (tasks.length > 0) {
+      localStorage.setItem("tasks", JSON.stringify(tasks));
+    }
+  }, [tasks]); // Runs whenever `tasks` change
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (val.trim()) {
+      let updatedTasks;
       if (editIndex !== null) {
-        const updatedTasks = tasks.map((task, index) => 
+        updatedTasks = tasks.map((task, index) =>
           index === editIndex ? val : task
         );
-        setTasks(updatedTasks);
         setEditIndex(null);
       } else {
-        setTasks([...tasks, val]);
+        updatedTasks = [...tasks, val];
       }
+      setTasks(updatedTasks);
+      localStorage.setItem("tasks", JSON.stringify(updatedTasks)); // Save immediately
       setVal("");
     }
   };
 
   const handleDelete = (index) => {
-    setTasks(tasks.filter((_, i) => i !== index));
+    const updatedTasks = tasks.filter((_, i) => i !== index);
+    setTasks(updatedTasks);
+    localStorage.setItem("tasks", JSON.stringify(updatedTasks)); // Save immediately
   };
 
   const handleEdit = (index) => {
@@ -31,7 +50,7 @@ const App = () => {
     setEditIndex(index);
   };
 
-  const filteredTasks = tasks.filter(task => 
+  const filteredTasks = tasks.filter((task) =>
     task.toLowerCase().includes(search.toLowerCase())
   );
 
